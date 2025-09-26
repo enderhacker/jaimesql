@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JaimeSQL - Constructor Visual de Consultas SQL</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/squel/5.12.2/squel.min.js"></script>
+    <style>
+        body {
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.container {
+  max-width: 1400px;
+}
+
+header h1 {
+  font-size: 2.8rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--pico-primary);
+  background: linear-gradient(135deg, var(--pico-primary), var(--pico-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+header h1 i {
+  margin-right: 15px;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--pico-muted-color);
+  margin-bottom: 3rem;
+  font-size: 1.2rem;
+}
+
+.grid-setup {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.condition-builder,
+.results-container,
+.advanced-options {
+  margin-top: 2rem;
+}
+
+.condition-group {
+  border-left: 3px solid var(--pico-primary);
+  padding-left: 25px;
+  margin-top: 20px;
+  position: relative;
+  background: var(--pico-card-background-color);
+  border-radius: var(--pico-border-radius);
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.condition-group::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 25px;
+  width: 20px;
+  height: 3px;
+  background: var(--pico-primary);
+  border-radius: 2px;
+}
+
+.condition-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--pico-form-element-background-color);
+  border-radius: var(--pico-border-radius);
+  transition: all 0.3s ease;
+}
+
+.condition-row.no-value {
+  grid-template-columns: 1fr 1fr auto;
+}
+
+.condition-row select,
+.condition-row input {
+  margin-bottom: 0;
+}
+
+.condition-row:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.group-logic {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.group-logic select {
+  width: auto;
+  font-weight: bold;
+  background: var(--pico-primary);
+  color: white;
+  border: none;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons button {
+  padding: 0.6rem;
+  line-height: 1;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.action-buttons button:hover {
+  transform: scale(1.1);
+}
+
+.action-buttons-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.generated-output {
+  background-color: var(--pico-form-element-background-color);
+  border: 2px solid var(--pico-primary);
+  border-radius: var(--pico-border-radius);
+  padding: 2rem;
+  font-family: "Courier New", monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  position: relative;
+}
+
+.human-readable {
+  background: linear-gradient(135deg, var(--pico-primary-background), var(--pico-secondary-background));
+  border-left: 6px solid var(--pico-primary);
+  color: var(--pico-primary-inverse);
+  padding: 2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1.2rem;
+  border-radius: var(--pico-border-radius);
+  line-height: 1.8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.advanced-section {
+  border: 1px solid var(--pico-form-element-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.toggle-advanced {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.toggle-advanced:hover {
+  color: var(--pico-primary);
+}
+
+.toggle-advanced i {
+  transition: transform 0.3s ease;
+}
+
+.toggle-advanced.expanded i {
+  transform: rotate(90deg);
+}
+
+.advanced-content {
+  display: none;
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.advanced-content.show {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alias-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--pico-form-element-background-color);
+  border-radius: var(--pico-border-radius);
+}
+
+.alias-row select,
+.alias-row input {
+  margin-bottom: 0;
+}
+
+small {
+  color: var(--pico-muted-color);
+}
+
+.help-tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.help-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: var(--pico-tooltip-background-color);
+  color: var(--pico-tooltip-color);
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+}
+
+.help-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.success-message {
+  background: var(--pico-ins-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--pico-border-radius);
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.error-message {
+  background: var(--pico-del-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--pico-border-radius);
+  margin-top: 0.5rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .condition-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .condition-row.no-value {
+    grid-template-columns: 1fr;
+  }
+
+  .alias-row {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons-container {
+    flex-direction: column;
+  }
+
+  .action-buttons-container button {
+    width: 100%;
+  }
+}
+
+    </style>
+</head>
+<body>
+    <main class="container">
+        <header>
+            <h1><i class="fas fa-database"></i> JaimeSQL</h1>
+            <p class="subtitle">Constructor Visual de Consultas SQL - Crea consultas complejas de forma intuitiva</p>
+        </header>
+
+        <article>
+            <header>
+                <h3><i class="fas fa-cog"></i> Configuración de la Base de Datos</h3>
+            </header>
+            <div class="grid grid-setup">
+                <label for="db-name">
+                    Nombre de la Base de Datos
+                    <span class="help-tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltip-text">El nombre de tu base de datos (opcional para la consulta)</span>
+                    </span>
+                    <input type="text" id="db-name" value="tienda_online" placeholder="Ej: mi_empresa_db">
+                </label>
+                <label for="table-names">
+                    Tablas Disponibles <small>(separadas por comas)</small>
+                    <span class="help-tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltip-text">Lista todas las tablas que existen en tu base de datos</span>
+                    </span>
+                    <input type="text" id="table-names" value="productos, clientes, pedidos, categorias, usuarios, ventas" placeholder="Ej: usuarios, productos, ventas">
+                </label>
+                <label for="column-names">
+                    Columnas Disponibles <small>(separadas por comas)</small>
+                    <span class="help-tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltip-text">Lista todas las columnas disponibles en tus tablas</span>
+                    </span>
+                    <input type="text" id="column-names" value="id, nombre, precio, stock, fecha_creacion, categoria_id, cliente_id, email, telefono, activo, descripcion, total" placeholder="Ej: id, nombre, email, fecha">
+                </label>
+            </div>
+        </article>
+
+        <article class="condition-builder">
+            <header>
+                <h3><i class="fas fa-wrench"></i> Constructor de Consulta</h3>
+            </header>
+            <div class="grid">
+                <label for="main-table-select">
+                    Tabla Principal
+                    <span class="help-tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltip-text">La tabla principal de donde obtendrás los datos</span>
+                    </span>
+                    <select id="main-table-select">
+                        <option value="">Selecciona una tabla...</option>
+                    </select>
+                </label>
+                <label for="main-columns-select">
+                    Columnas a Mostrar <small>(mantén Ctrl para seleccionar múltiples)</small>
+                    <span class="help-tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltip-text">Deja vacío para seleccionar todas las columnas (*)</span>
+                    </span>
+                    <select id="main-columns-select" multiple size="4"></select>
+                </label>
+            </div>
+            
+             Column Aliases Section 
+            <div class="advanced-section">
+                <div class="toggle-advanced" id="toggle-aliases">
+                    <i class="fas fa-chevron-right"></i>
+                    <h5 style="margin: 0;">Alias de Columnas (AS)</h5>
+                </div>
+                <div class="advanced-content" id="aliases-content">
+                    <p><small>Define nombres alternativos para las columnas en el resultado</small></p>
+                    <div id="aliases-container"></div>
+                    <button type="button" id="add-alias-btn" class="secondary">
+                        <i class="fas fa-plus"></i> Agregar Alias
+                    </button>
+                </div>
+            </div>
+            
+            <div class="advanced-section">
+                <div class="toggle-advanced" id="toggle-advanced">
+                    <i class="fas fa-chevron-right"></i>
+                    <h5 style="margin: 0;">Opciones Avanzadas</h5>
+                </div>
+                <div class="advanced-content" id="advanced-content">
+                    <div class="grid">
+                        <label for="order-by">
+                            Ordenar Por
+                            <select id="order-by">
+                                <option value="">Sin ordenar</option>
+                            </select>
+                        </label>
+                        <label for="order-direction">
+                            Dirección
+                            <select id="order-direction">
+                                <option value="ASC">Ascendente (menor a mayor)</option>
+                                <option value="DESC">Descendente (mayor a menor)</option>
+                            </select>
+                        </label>
+                        <label for="limit-rows">
+                            Limitar Resultados
+                            <input type="number" id="limit-rows" placeholder="Ej: 100" min="1">
+                        </label>
+                        <label for="group-by">
+                            Agrupar Por
+                            <select id="group-by">
+                                <option value="">Sin agrupar</option>
+                            </select>
+                        </label>
+                        <label for="having-condition">
+                            Condición HAVING
+                            <input type="text" id="having-condition" placeholder="Ej: COUNT(*) > 5">
+                        </label>
+                        <label for="distinct-checkbox">
+                            <input type="checkbox" id="distinct-checkbox">
+                            Solo valores únicos (DISTINCT)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <h4 style="margin-top: 2rem;"><i class="fas fa-filter"></i> Condiciones de Filtrado</h4>
+            <p><small>Define las condiciones que deben cumplir los registros que quieres obtener</small></p>
+            <div id="where-container"></div>
+            <button id="add-main-group-btn" class="contrast">
+                <i class="fas fa-plus-circle"></i> Agregar Condiciones de Filtrado
+            </button>
+        </article>
+
+        <article class="results-container">
+            <header>
+                <h3><i class="fas fa-eye"></i> Resultado de tu Consulta</h3>
+            </header>
+            
+            <h4><i class="fas fa-comment-alt"></i> Descripción en Español</h4>
+            <div id="human-readable" class="human-readable">
+                Configura tu consulta arriba para ver la descripción aquí.
+            </div>
+
+            <h4><i class="fas fa-code"></i> Consulta SQL Generada</h4>
+            <pre><code id="generated-sql" class="generated-output">-- Tu consulta SQL aparecerá aquí
+SELECT * FROM tabla...</code></pre>
+            
+            <div class="action-buttons-container">
+                <button id="copy-sql-btn" class="secondary">
+                    <i class="fas fa-copy"></i> Copiar SQL
+                </button>
+                <button id="format-sql-btn" class="secondary">
+                    <i class="fas fa-indent"></i> Formatear
+                </button>
+                <button id="clear-all-btn" class="outline">
+                    <i class="fas fa-trash"></i> Limpiar Todo
+                </button>
+            </div>
+        </article>
+    </main>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+  // Elementos del DOM
+  const dbNameInput = document.getElementById("db-name")
+  const tableNamesInput = document.getElementById("table-names")
+  const columnNamesInput = document.getElementById("column-names")
+  const mainTableSelect = document.getElementById("main-table-select")
+  const mainColumnsSelect = document.getElementById("main-columns-select")
+  const orderBySelect = document.getElementById("order-by")
+  const orderDirectionSelect = document.getElementById("order-direction")
+  const limitRowsInput = document.getElementById("limit-rows")
+  const groupBySelect = document.getElementById("group-by")
+  const havingConditionInput = document.getElementById("having-condition")
+  const distinctCheckbox = document.getElementById("distinct-checkbox")
+  const whereContainer = document.getElementById("where-container")
+  const addMainGroupBtn = document.getElementById("add-main-group-btn")
+  const humanReadableOutput = document.getElementById("human-readable")
+  const generatedSqlOutput = document.getElementById("generated-sql")
+  const toggleAdvanced = document.getElementById("toggle-advanced")
+  const advancedContent = document.getElementById("advanced-content")
+  const toggleAliases = document.getElementById("toggle-aliases")
+  const aliasesContent = document.getElementById("aliases-content")
+  const aliasesContainer = document.getElementById("aliases-container")
+  const addAliasBtn = document.getElementById("add-alias-btn")
+  const copySqlBtn = document.getElementById("copy-sql-btn")
+  const formatSqlBtn = document.getElementById("format-sql-btn")
+  const clearAllBtn = document.getElementById("clear-all-btn")
+
+  const state = {
+    tables: [],
+    columns: [],
+  }
+
+  // Operadores mejorados con nombres legibles en español
+  const operators = {
+    "=": { label: "es igual a", needsValue: true },
+    "<>": { label: "es diferente de", needsValue: true },
+    "!=": { label: "no es igual a", needsValue: true },
+    ">": { label: "es mayor que", needsValue: true },
+    "<": { label: "es menor que", needsValue: true },
+    ">=": { label: "es mayor o igual que", needsValue: true },
+    "<=": { label: "es menor o igual que", needsValue: true },
+    LIKE: { label: "contiene el texto", needsValue: true },
+    "NOT LIKE": { label: "no contiene el texto", needsValue: true },
+    ILIKE: { label: "contiene el texto (sin mayúsculas)", needsValue: true },
+    IN: { label: "está dentro de la lista", needsValue: true },
+    "NOT IN": { label: "no está dentro de la lista", needsValue: true },
+    "IS NULL": { label: "está vacío (es nulo)", needsValue: false },
+    "IS NOT NULL": { label: "no está vacío (no es nulo)", needsValue: false },
+    BETWEEN: { label: "está entre los valores", needsValue: true },
+    "NOT BETWEEN": { label: "no está entre los valores", needsValue: true },
+    EXISTS: { label: "existe en subconsulta", needsValue: true },
+    "NOT EXISTS": { label: "no existe en subconsulta", needsValue: true },
+  }
+
+  const logicOperators = {
+    AND: "Y además",
+    OR: "O también",
+  }
+
+  // Toggle advanced options
+  toggleAdvanced.addEventListener("click", () => {
+    toggleSection(advancedContent, toggleAdvanced)
+  })
+
+  toggleAliases.addEventListener("click", () => {
+    toggleSection(aliasesContent, toggleAliases)
+  })
+
+  function toggleSection(content, toggle) {
+    const isExpanded = content.classList.contains("show")
+    if (isExpanded) {
+      content.classList.remove("show")
+      toggle.classList.remove("expanded")
+    } else {
+      content.classList.add("show")
+      toggle.classList.add("expanded")
+    }
+  }
+
+  // Utility functions
+  function showMessage(text, type = "success") {
+    const message = document.createElement("div")
+    message.className = `${type}-message`
+    message.innerHTML = `<i class="fas fa-${type === "success" ? "check" : "exclamation-triangle"}"></i> ${text}`
+    document.body.appendChild(message)
+
+    setTimeout(() => {
+      message.remove()
+    }, 3000)
+  }
+
+  // Copy SQL functionality
+  copySqlBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(generatedSqlOutput.textContent)
+      showMessage("SQL copiado al portapapeles")
+    } catch (err) {
+      showMessage("Error al copiar SQL", "error")
+    }
+  })
+
+  // Format SQL functionality
+  formatSqlBtn.addEventListener("click", () => {
+    const sql = generateQuery();
+    const formatted = formatSQL(sql)
+    generatedSqlOutput.textContent = formatted
+    showMessage("SQL formateado")
+  })
+
+  // Clear all functionality
+  clearAllBtn.addEventListener("click", () => {
+    if (confirm("¿Estás seguro de que quieres limpiar toda la consulta?")) {
+      whereContainer.innerHTML = ""
+      aliasesContainer.innerHTML = ""
+      mainTableSelect.value = ""
+      mainColumnsSelect.selectedIndex = -1
+      orderBySelect.value = ""
+      limitRowsInput.value = ""
+      groupBySelect.value = ""
+      havingConditionInput.value = ""
+      distinctCheckbox.checked = false
+      addMainGroupBtn.style.display = "inline-block"
+      generateQuery()
+      showMessage("Consulta limpiada")
+    }
+  })
+
+  // Simple SQL formatter
+  function formatSQL(sql) {
+    return sql
+      .replace(/SELECT/gi, "SELECT\n  ")
+      .replace(/FROM/gi, "\nFROM")
+      .replace(/WHERE/gi, "\nWHERE")
+      .replace(/ORDER BY/gi, "\nORDER BY")
+      .replace(/GROUP BY/gi, "\nGROUP BY")
+      .replace(/HAVING/gi, "\nHAVING")
+      .replace(/LIMIT/gi, "\nLIMIT")
+      .replace(/AND/gi, "\n  AND")
+      .replace(/OR/gi, "\n  OR")
+  }
+
+  // Alias management
+  addAliasBtn.addEventListener("click", () => {
+    aliasesContainer.appendChild(createAliasRow())
+  })
+
+  function createAliasRow() {
+    const row = document.createElement("div")
+    row.className = "alias-row"
+
+    const columnSelect = createDynamicSelect(state.columns, "Selecciona columna...")
+    const aliasInput = document.createElement("input")
+    aliasInput.type = "text"
+    aliasInput.placeholder = "Nombre del alias..."
+
+    const removeBtn = document.createElement("button")
+    removeBtn.type = "button"
+    removeBtn.className = "outline"
+    removeBtn.innerHTML = '<i class="fas fa-trash"></i>'
+    removeBtn.title = "Eliminar alias"
+
+    removeBtn.addEventListener("click", () => {
+      row.remove()
+      generateQuery()
+    })
+
+    columnSelect.addEventListener("change", generateQuery)
+    aliasInput.addEventListener("keyup", generateQuery)
+
+    row.append(columnSelect, aliasInput, removeBtn)
+    return row
+  }
+
+  // --- INICIALIZACIÓN Y ACTUALIZACIÓN DEL ESQUEMA ---
+  function updateSchema() {
+    state.tables = tableNamesInput.value
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+    state.columns = columnNamesInput.value
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    updateSelect(mainTableSelect, state.tables, true)
+    updateSelect(mainColumnsSelect, state.columns)
+    updateSelect(orderBySelect, state.columns, true)
+    updateSelect(groupBySelect, state.columns, true)
+
+    // Update existing alias selects
+    aliasesContainer.querySelectorAll("select").forEach((select) => {
+      updateSelect(select, state.columns, true)
+    })
+
+    generateQuery()
+  }
+
+  function updateSelect(selectElement, options, includeEmpty = false) {
+    const selectedValues = Array.from(selectElement.selectedOptions).map((opt) => opt.value)
+    selectElement.innerHTML = ""
+
+    if (includeEmpty) {
+      const emptyOption = new Option(
+        selectElement.id.includes("table")
+          ? "Selecciona una tabla..."
+          : selectElement.id.includes("order")
+            ? "Sin ordenar"
+            : selectElement.id.includes("group")
+              ? "Sin agrupar"
+              : "Selecciona columna...",
+        "",
+      )
+      selectElement.add(emptyOption)
+    }
+
+    options.forEach((optionText) => {
+      const option = new Option(optionText, optionText)
+      if (selectedValues.includes(optionText)) {
+        option.selected = true
+      }
+      selectElement.add(option)
+    })
+  }
+  // Event listeners
+  ;[dbNameInput, tableNamesInput, columnNamesInput].forEach((input) => {
+    input.addEventListener("keyup", updateSchema)
+  })
+  ;[mainTableSelect, mainColumnsSelect, orderBySelect, orderDirectionSelect, groupBySelect, distinctCheckbox].forEach(
+    (element) => {
+      element.addEventListener("change", generateQuery)
+    },
+  )
+  ;[limitRowsInput, havingConditionInput].forEach((input) => {
+    input.addEventListener("keyup", generateQuery)
+  })
+
+  addMainGroupBtn.addEventListener("click", () => {
+    if (whereContainer.children.length === 0) {
+      whereContainer.appendChild(createConditionGroup())
+      addMainGroupBtn.style.display = "none"
+      generateQuery()
+    }
+  })
+
+  // --- CONSTRUCCIÓN VISUAL ---
+  function createConditionRow() {
+    const row = document.createElement("div")
+    row.className = "condition-row"
+
+    const columnSelect = createDynamicSelect(state.columns, "Selecciona columna...")
+    const operatorSelect = createOperatorSelect()
+    const valueInput = document.createElement("input")
+    valueInput.type = "text"
+    valueInput.placeholder = "Escribe el valor..."
+
+    const buttons = document.createElement("div")
+    buttons.className = "action-buttons"
+    buttons.innerHTML = `
+            <button type="button" class="add-condition" title="Añadir otra condición" style="background: var(--pico-primary);">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button type="button" class="add-group" title="Añadir grupo de condiciones" style="background: var(--pico-secondary);">
+                <i class="fas fa-layer-group"></i>
+            </button>
+            <button type="button" class="remove-item" title="Eliminar esta condición" style="background: var(--pico-del-color);">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `
+
+    // Handle operator change to show/hide value input
+    operatorSelect.addEventListener("change", () => {
+      const selectedOperator = operatorSelect.value
+      const needsValue = operators[selectedOperator]?.needsValue !== false
+
+      if (needsValue) {
+        row.classList.remove("no-value")
+        if (!row.contains(valueInput)) {
+          row.insertBefore(valueInput, buttons)
+        }
+      } else {
+        row.classList.add("no-value")
+        if (row.contains(valueInput)) {
+          row.removeChild(valueInput)
+        }
+      }
+      generateQuery()
+    })
+
+    columnSelect.addEventListener("change", generateQuery)
+    valueInput.addEventListener("keyup", generateQuery)
+
+    row.append(columnSelect, operatorSelect, valueInput, buttons)
+    return row
+  }
+
+  function createOperatorSelect() {
+    const select = document.createElement("select")
+    select.add(new Option("Selecciona operador...", ""))
+
+    Object.entries(operators).forEach(([value, config]) => {
+      select.add(new Option(config.label, value))
+    })
+
+    return select
+  }
+
+  function createConditionGroup() {
+    const group = document.createElement("div")
+    group.className = "condition-group"
+
+    group.innerHTML = `
+            <div class="group-logic">
+                <label>Operador lógico:</label>
+                <select class="logic-select">
+                    <option value="AND">Y (todas las condiciones)</option>
+                    <option value="OR">O (cualquier condición)</option>
+                </select>
+            </div>
+            <button type="button" class="remove-item outline" title="Eliminar todo este grupo" style="float: right;">
+                <i class="fas fa-times-circle"></i> Eliminar Grupo
+            </button>
+        `
+    group.appendChild(createConditionRow())
+    return group
+  }
+
+  function createDynamicSelect(options, placeholder = "Selecciona...") {
+    const select = document.createElement("select")
+    select.add(new Option(placeholder, ""))
+    options.forEach((opt) => select.add(new Option(opt, opt)))
+    return select
+  }
+
+  // Delegación de eventos para los botones dinámicos
+  whereContainer.addEventListener("click", (e) => {
+    const target = e.target.closest("button")
+    if (!target) return
+
+    if (target.classList.contains("add-condition")) {
+      const parentGroup = target.closest(".condition-group")
+      parentGroup.appendChild(createConditionRow())
+    } else if (target.classList.contains("add-group")) {
+      const parentGroup = target.closest(".condition-group")
+      parentGroup.appendChild(createConditionGroup())
+    } else if (target.classList.contains("remove-item")) {
+      const itemToRemove = target.closest(".condition-row, .condition-group")
+      if (itemToRemove) {
+        const parent = itemToRemove.parentElement
+        itemToRemove.remove()
+
+        if (
+          parent.classList.contains("condition-group") &&
+          parent.querySelectorAll(".condition-row, .condition-group").length === 0
+        ) {
+          parent.remove()
+        }
+
+        if (whereContainer.children.length === 0) {
+          addMainGroupBtn.style.display = "inline-block"
+        }
+      }
+    }
+    generateQuery()
+  })
+
+  whereContainer.addEventListener("change", generateQuery)
+  whereContainer.addEventListener("keyup", generateQuery)
+
+  // --- GENERACIÓN DE CONSULTAS ---
+  function generateQuery() {
+    const selectedTable = mainTableSelect.value
+    if (!selectedTable) {
+      humanReadableOutput.innerHTML = `
+                <i class="fas fa-info-circle"></i> 
+                <strong>Instrucciones:</strong><br>
+                1. Selecciona una tabla principal<br>
+                2. Elige las columnas que quieres ver (opcional)<br>
+                3. Agrega condiciones de filtrado si es necesario<br>
+                4. Configura opciones avanzadas como ordenamiento y límites
+            `
+      generatedSqlOutput.textContent = "-- Selecciona una tabla para comenzar"
+      return
+    }
+
+    let query = squel.select().from(selectedTable)
+
+    // Handle DISTINCT
+    if (distinctCheckbox.checked) {
+      query = query.distinct()
+    }
+
+    // Handle column selection and aliases
+    const selectedColumns = Array.from(mainColumnsSelect.selectedOptions).map((opt) => opt.value)
+    const aliases = getAliases()
+
+    if (selectedColumns.length > 0) {
+      selectedColumns.forEach((col) => {
+        const alias = aliases[col]
+        if (alias) {
+          query.field(col, alias)
+        } else {
+          query.field(col)
+        }
+      })
+    } else {
+      // If no specific columns selected, add aliases for all columns that have them
+      Object.entries(aliases).forEach(([col, alias]) => {
+        query.field(col, alias)
+      })
+    }
+
+    // Construir descripción humana
+    let humanSentence = `<i class="fas fa-search"></i> <strong>BUSCAR</strong> `
+
+    if (distinctCheckbox.checked) {
+      humanSentence += `<strong>valores únicos de</strong> `
+    }
+
+    if (selectedColumns.length > 0) {
+      const columnList = selectedColumns
+        .map((c) => {
+          const alias = aliases[c]
+          return alias ? `<code>${c}</code> como <strong>"${alias}"</strong>` : `<code>${c}</code>`
+        })
+        .join(", ")
+      humanSentence += `las columnas ${columnList}`
+    } else {
+      humanSentence += `<strong>todas las columnas</strong>`
+      if (Object.keys(aliases).length > 0) {
+        const aliasList = Object.entries(aliases)
+          .map(([col, alias]) => `<code>${col}</code> como <strong>"${alias}"</strong>`)
+          .join(", ")
+        humanSentence += ` (con alias: ${aliasList})`
+      }
+    }
+
+    humanSentence += ` <strong>en la tabla</strong> <code>${selectedTable}</code>`
+
+    // Procesar condiciones WHERE
+    const topLevelGroup = whereContainer.querySelector(".condition-group")
+    if (topLevelGroup) {
+      const whereExpression = squel.expr()
+      const humanWhere = parseGroup(topLevelGroup, whereExpression)
+
+      if (humanWhere) {
+        query.where(whereExpression)
+        humanSentence += `<br><br><i class="fas fa-filter"></i> <strong>DONDE</strong> ${humanWhere}`
+      }
+    }
+
+    // Opciones avanzadas
+    if (groupBySelect.value) {
+      query.group(groupBySelect.value)
+      humanSentence += `<br><br><i class="fas fa-layer-group"></i> <strong>AGRUPADO POR</strong> <code>${groupBySelect.value}</code>`
+    }
+
+    if (havingConditionInput.value.trim()) {
+      query.having(havingConditionInput.value.trim())
+      humanSentence += `<br><br><i class="fas fa-filter"></i> <strong>CON CONDICIÓN DE GRUPO</strong> ${havingConditionInput.value.trim()}`
+    }
+
+    if (orderBySelect.value) {
+      const direction = orderDirectionSelect.value === "DESC" ? "descendente" : "ascendente"
+      query.order(orderBySelect.value, orderDirectionSelect.value === "DESC")
+      humanSentence += `<br><br><i class="fas fa-sort"></i> <strong>ORDENADO POR</strong> <code>${orderBySelect.value}</code> de forma ${direction}`
+    }
+
+    if (limitRowsInput.value && Number.parseInt(limitRowsInput.value) > 0) {
+      query.limit(Number.parseInt(limitRowsInput.value))
+      humanSentence += `<br><br><i class="fas fa-list-ol"></i> <strong>LIMITADO A</strong> ${limitRowsInput.value} resultados`
+    }
+
+    humanReadableOutput.innerHTML = humanSentence + "."
+    generatedSqlOutput.textContent = query.toString()
+    return query.toString();
+  }
+
+  function getAliases() {
+    const aliases = {}
+    aliasesContainer.querySelectorAll(".alias-row").forEach((row) => {
+      const select = row.querySelector("select")
+      const input = row.querySelector("input")
+      if (select.value && input.value.trim()) {
+        aliases[select.value] = input.value.trim()
+      }
+    })
+    return aliases
+  }
+
+  function parseGroup(groupElement, expr) {
+    const logic = groupElement.querySelector(".logic-select").value
+    const humanLogic = ` <strong>${logicOperators[logic]}</strong> `
+    const humanConditions = []
+
+    // Procesar filas de condiciones directas
+    groupElement.querySelectorAll(":scope > .condition-row").forEach((row) => {
+      const selects = row.querySelectorAll("select")
+      const input = row.querySelector("input")
+
+      if (selects.length >= 2) {
+        const column = selects[0].value.trim()
+        const operator = selects[1].value.trim()
+        const value = input ? input.value.trim() : ""
+
+        if (column && operator) {
+          const operatorConfig = operators[operator]
+          if (!operatorConfig.needsValue) {
+            // Operators like IS NULL, IS NOT NULL don't need values
+            expr[logic.toLowerCase()](`${column} ${operator}`)
+            humanConditions.push(`<code>${column}</code> ${operatorConfig.label}`)
+          } else if (value) {
+            // Operators that need values
+            if (operator === "IN" || operator === "NOT IN") {
+              // Handle IN operator with comma-separated values
+              const values = value
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean)
+              expr[logic.toLowerCase()](`${column} ${operator} (${values.map(() => "?").join(", ")})`, ...values)
+              humanConditions.push(
+                `<code>${column}</code> ${operatorConfig.label} <strong>[${values.join(", ")}]</strong>`,
+              )
+            } else if (operator === "BETWEEN" || operator === "NOT BETWEEN") {
+              // Handle BETWEEN operator
+              const values = value
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean)
+              if (values.length >= 2) {
+                expr[logic.toLowerCase()](`${column} ${operator} ? AND ?`, values[0], values[1])
+                humanConditions.push(
+                  `<code>${column}</code> ${operatorConfig.label} <strong>"${values[0]}"</strong> y <strong>"${values[1]}"</strong>`,
+                )
+              }
+            } else {
+              expr[logic.toLowerCase()](`${column} ${operator} ?`, value)
+              humanConditions.push(`<code>${column}</code> ${operatorConfig.label} <strong>"${value}"</strong>`)
+            }
+          }
+        }
+      }
+    })
+
+    // Procesar grupos anidados recursivamente
+    groupElement.querySelectorAll(":scope > .condition-group").forEach((nestedGroup) => {
+      const nestedExpr = squel.expr()
+      const humanNested = parseGroup(nestedGroup, nestedExpr)
+      if (humanNested) {
+        expr[logic.toLowerCase()](nestedExpr)
+        humanConditions.push(`(${humanNested})`)
+      }
+    })
+
+    return humanConditions.join(humanLogic)
+  }
+
+  // --- EJECUCIÓN INICIAL ---
+  updateSchema()
+})
+
+    </script>
+</body>
+</html>
